@@ -29,42 +29,38 @@ const net = require('net');
 const child_process = require('child_process');
 const require_reload = require('require-reload')(require);
 const getPort = require('portfinder').getPortPromise;
+const fs = require('fs');
 //const vm2 = require('vm2');
 
 ipc.config.id    = 'onenoded';
 ipc.config.retry = 1500;
 
 ipc.serve(function(){
-  function patchEmitter(emitter, websocket) {
-    var oldEmit = emitter.emit;
-  
-    emitter.emit = function() {
-        var emitArgs = arguments;
-        console.log(arguments);
-        oldEmit.apply(emitter, arguments);
-    }
-  }
-  patchEmitter(ipc.server);
-
   ipc.server.on('start', function(){
     console.log('started!');
   });
 
   ipc.server.on('start_proc', function(input_path){
-    console.log('asdgasasgaugesifhfsfjeshdb');
-    // possibly require('require-reload').emptyCache(require)?
+    console.log("Starting " + input_path);
     getPort().then(port => {
+      console.error("Got port", port);
+      console.error("Setting currServer.");
       currServer = input_path.split('\\').pop().split('/').pop();
       let crashes = 0;
       process.env.PORT = port;
       while(crashes < 5){
+        console.log("hi");
         try{
           let main_file = JSON.parse(fs.readFileSync(path.join(input_path, "package.json"))).main;
+          // possibly require('require-reload').emptyCache(require)?
           require_reload(path.join(input_path, main_file));
-          console.error(input_path + " appears to have started successfully.")
+          console.error(input_path + " appears to have started successfully.");
+          currServer = null;
+          return;
         }catch(e){
           crashes ++;
-          console.error(input_path + " crashed! Retrying.");
+          console.error(input_path + " crashed while starting! Retrying.");
+          console.error(e);
         }
       }
       console.error(input_path + " crashed too many times. Giving up.");
@@ -99,6 +95,7 @@ ipc.serve(function(){
       servers[currServer].push(this);
     } else {
       console.error("Unexpected server-listen detected. Maybe you're starting up the server asynchronously?");
+      console.error("called listen(", ...args, ")");
     }
     return this._original_listen(...args);
   };
