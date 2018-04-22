@@ -1,6 +1,11 @@
 {
+  "bin": {
+    "onenode": "./bin/onenode.js"
+  },
   "dependencies": {
+    "mkdirp": "^0.5.1",
     "node-ipc": "^9.1.1",
+    "portfinder": "^1.0.13",
     "require-reload": "^0.2.2"
   },
   "devDependencies": {
